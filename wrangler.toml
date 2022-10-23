@@ -1,0 +1,14 @@
+kv_namespaces = [
+  { binding = "KV", id = "0fe140f93bf346e48521c5d8fd7a86aa", "preview_id" = "550aacb253ef47d69e5305ff5ec7746a" }
+]
+
+[[ d1_databases ]]
+binding = "DB"
+database_name = "spotifyv2"
+database_id = "0f06048d-45af-4ceb-a6c5-3383cadd7cd5"
+
+[miniflare]
+kv_persist = true # Defaults to ./.mf/kv
+port = 8800
+env_path = ".env"
+persist = true
