@@ -1,3 +1,5 @@
+compatibility_date = "2022-11-30"
+
 kv_namespaces = [
   { binding = "KV", id = "0fe140f93bf346e48521c5d8fd7a86aa", "preview_id" = "550aacb253ef47d69e5305ff5ec7746a" }
 ]
