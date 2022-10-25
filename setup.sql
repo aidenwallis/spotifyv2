@@ -1,3 +1,4 @@
+-- This file is temporary until wrangler supports migrations!
 CREATE TABLE IF NOT EXISTS users (
   id TEXT NOT NULL PRIMARY KEY,
   avatar TEXT NOT NULL,
