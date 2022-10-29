@@ -44,3 +44,21 @@ export function findLargestImage(images: SpotifyImage[]) {
 
   return image?.url || null;
 }
+
+export interface DataResponse {
+  artists: string[];
+  albumArtUrl: string | null;
+  title: string;
+}
+
+export function getData(item: CurrentlyPlayingItem | null) {
+  if (!item) {
+    return null;
+  }
+
+  return {
+    artists: item.artists.map((a) => a.name),
+    albumArtUrl: findLargestImage(item?.album?.images || []),
+    title: item.name,
+  };
+}
