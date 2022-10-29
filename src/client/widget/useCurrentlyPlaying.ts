@@ -59,9 +59,14 @@ const fetchStatus = async (accessToken: string) => {
 
 export function useCurrentlyPlaying(overlayToken: string) {
   const [status, setStatus] = useState<DataResponse | null>(null);
-  const { data: tokens, refetch } = trpc.getSpotifyToken.useQuery({
-    overlayToken,
-  });
+  const { data: tokens, refetch } = trpc.getSpotifyToken.useQuery(
+    {
+      overlayToken,
+    },
+    {
+      refetchOnWindowFocus: false,
+    }
+  );
 
   useEffect(() => {
     if (!tokens?.accessToken) {
