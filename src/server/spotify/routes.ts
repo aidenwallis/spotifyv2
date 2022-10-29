@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { findLargestImage } from "../../spotify";
+import { DataResponse, getData } from "../../spotify";
 import { UserModel } from "../db";
 import { Dependencies } from "../deps";
 import { UserService } from "../user/service";
@@ -20,12 +20,6 @@ interface BaseResponse {
 
 interface ErrorResponse extends BaseResponse {
   error: string;
-}
-
-interface DataResponse {
-  artists: string[];
-  albumArtUrl: string | null;
-  title: string;
 }
 
 interface SuccessResponse extends BaseResponse {
@@ -76,18 +70,11 @@ async function doGenericWork(apiToken: string, deps: Dependencies): Promise<Gene
   }
 
   try {
-    const resp = await spotifyService.getCurrentlyPlaying(validatedUser.id, validatedUser.accessToken);
-    if (!(resp.is_playing && resp.item)) {
-      return { data: null, message: "", status: 200 };
+    const resp = await spotifyService.getCurrentlyPlaying(validatedUser.accessToken);
+    const data = getData(resp?.item || null);
+    if (!data) {
+      return { data: null, message: "No song playing.", status: 200 };
     }
-
-    const { item } = resp;
-
-    const data = {
-      artists: item.artists.map((a) => a.name),
-      albumArtUrl: findLargestImage(item?.album?.images || []),
-      title: item.name,
-    };
 
     return { data, message: `${data.artists.join(", ")} - ${data.title}`, status: 200 };
   } catch (error) {

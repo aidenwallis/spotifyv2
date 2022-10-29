@@ -72,7 +72,7 @@ export class SpotifyService {
     return body as SpotifyUser;
   }
 
-  public async getCurrentlyPlaying(userId: string, accessToken: string) {
+  public async getCurrentlyPlaying(accessToken: string) {
     if (ratelimitEndsAt > Date.now()) {
       throw new RatelimitedResponse();
     }
@@ -82,6 +82,10 @@ export class SpotifyService {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+
+    if (r.status === 204) {
+      return null;
+    }
 
     const body = await r.json();
     if (r.status !== 200) {
