@@ -96,7 +96,7 @@ export const CopyableField = (props: { label: string; url: string; tokenType: To
           <button
             className={`${
               resetToken.isLoading ? "bg-slate-500" : "bg-red-600 hover:bg-red-500 active:bg-red-700"
-            } text-white font-bold text-sm h-full px-3`}
+            } text-white font-bold text-sm h-full px-4`}
             onClick={handleReset}
           >
             Reset
