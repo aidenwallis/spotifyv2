@@ -2,7 +2,7 @@ import { useCurrentlyPlaying } from "./useCurrentlyPlaying";
 import { router } from "../router";
 import { usePlayerState } from "./usePlayerState";
 import { PlayerVisibility, TitleVisibility } from "./state-manager";
-import { PropsWithChildren, useEffect, useState } from "react";
+import { PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useImageLoaded } from "./useImageLoaded";
 import styles from "./Widget.module.css";
 
@@ -54,12 +54,29 @@ const TitleVisibilityWrapper = ({ children, visibility }: PropsWithChildren<{ vi
   return <div className={`transition-all ease-in-out duration-200 ${classes[visibility]}`}>{children}</div>;
 };
 
+const MAX_TITLE_WIDTH = 236;
+
+const TitleScroller = ({ children }: PropsWithChildren<{}>) => {
+  const [scrolling, setScrolling] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    ref?.current && setScrolling(ref.current.offsetWidth > MAX_TITLE_WIDTH);
+  }, [ref?.current?.offsetWidth, setScrolling]);
+
+  return (
+    <div ref={ref} className={`absolute${scrolling ? " " + styles.scroll : ""}`}>
+      <div className="pl-3">{children}</div>
+    </div>
+  );
+};
+
 const ArtistName = ({ artists }: { artists: string[] }) => {
-  return <h3 className="text-green-400 leading-none font-bold uppercase truncate">{artists.join(", ")}</h3>;
+  return <h3 className="text-green-400 leading-none font-bold uppercase whitespace-nowrap">{artists.join(", ")}</h3>;
 };
 
 const TrackName = ({ name }: { name: string }) => {
-  return <h1 className="text-white text-2xl leading-none font-bold truncate">{name}</h1>;
+  return <h1 className="text-white text-2xl leading-none font-bold whitespace-nowrap">{name}</h1>;
 };
 
 export const PlayerWidget = () => {
@@ -67,23 +84,27 @@ export const PlayerWidget = () => {
   const status = useCurrentlyPlaying((params as { overlayToken: string })?.overlayToken);
   const state = usePlayerState(status);
 
-  console.log(state);
-
   return (
     <PlayerShell visibility={state.visibility}>
-      <div className="flex h-full relative items-center">
-        <div className="left-0 top-0 absolute">
-          <AlbumArt albumArt={state.data?.albumArtUrl || null} />
-        </div>
-        <div className="min-w-0 ml-16 pl-3 flex-1">
+      <div className="flex h-full relative flex-row-reverse items-center">
+        <div className="min-w-0 ml-16 flex-1 relative">
           <TitleVisibilityWrapper visibility={state.artist}>
-            <ArtistName artists={state.data?.artists || []} />
-          </TitleVisibilityWrapper>
-          <TitleVisibilityWrapper visibility={state.track}>
-            <div className="pt-1">
-              <TrackName name={state.data?.title || ""} />
+            <div className="h-4">
+              <TitleScroller>
+                <ArtistName artists={state.data?.artists || []} />
+              </TitleScroller>
             </div>
           </TitleVisibilityWrapper>
+          <TitleVisibilityWrapper visibility={state.track}>
+            <div className="pt-1 h-7">
+              <TitleScroller>
+                <TrackName name={state.data?.title || ""} />
+              </TitleScroller>
+            </div>
+          </TitleVisibilityWrapper>
+        </div>
+        <div className="left-0 top-0 absolute">
+          <AlbumArt albumArt={state.data?.albumArtUrl || null} />
         </div>
       </div>
     </PlayerShell>

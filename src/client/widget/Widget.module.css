@@ -10,3 +10,16 @@
 .fadeIn {
   animation: fadeIn 150ms ease-in-out forwards;
 }
+
+.scroll {
+  animation: slide 30s linear infinite;
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(244px);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
