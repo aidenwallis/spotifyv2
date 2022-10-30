@@ -55,11 +55,19 @@ const TitleVisibilityWrapper = ({ children, visibility }: PropsWithChildren<{ vi
 };
 
 const ArtistName = ({ artists }: { artists: string[] }) => {
-  return <h3 className="text-green-400 leading-none font-bold uppercase truncate">{artists.join(", ")}</h3>;
+  return (
+    <marquee>
+      <h3 className="text-green-400 leading-none font-bold uppercase truncate">{artists.join(", ")}</h3>
+    </marquee>
+  );
 };
 
 const TrackName = ({ name }: { name: string }) => {
-  return <h1 className="text-white text-2xl leading-none font-bold truncate">{name}</h1>;
+  return (
+    <marquee>
+      <h1 className="text-white text-2xl leading-none font-bold truncate">{name}</h1>
+    </marquee>
+  );
 };
 
 export const PlayerWidget = () => {
