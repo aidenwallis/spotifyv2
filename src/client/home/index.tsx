@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { AppRouter } from "../../server/trpc";
 import { useAuth } from "../auth";
-import { AppRouterTypes, trpc } from "../trpc";
+import { trpc } from "../trpc";
 import { Logo } from "./logo";
 
-type TokenType = AppRouterTypes["resetToken"]["input"]["type"];
+type TokenType = AppRouter["resetToken"]["_def"]["_input_in"]["type"];
 
 const useTimeout = () => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -160,7 +161,7 @@ export const LoginPrompt = () => {
       <p className="text-slate-50">Please login with Spotify to continue.</p>
       <div className="pt-4">
         <a
-          href="/auth/redirect"
+          href="http://localhost:8787/auth/redirect"
           className="bg-blue-500 hover:bg-blue-600 active:bg-blue-800 text-sm font-semibold text-white px-4 py-2 rounded-md cursor-pointer inline-block"
         >
           Login with Spotify
