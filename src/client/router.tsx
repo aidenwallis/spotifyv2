@@ -1,25 +1,61 @@
-import { RouterProvider, createReactRouter, createRouteConfig } from "@tanstack/react-router";
-import { PropsWithChildren } from "react";
+import { Outlet, RootRoute, Route, Router, RouterProvider } from "@tanstack/react-router";
 import { z } from "zod";
 import { Home } from "./home";
 import { PlayerWidget } from "./widget";
 
-const routeConfig = createRouteConfig().addChildren((createRoute) => [
-  createRoute({ path: "/", element: <Home /> }),
-  createRoute({ path: "overlay" }).addChildren((createRoute) => [
-    createRoute({
-      path: ":overlayToken",
-      element: <PlayerWidget />,
-      parseParams: ({ overlayToken }) => ({
-        overlayToken: z.string().parse(overlayToken),
-      }),
-      stringifyParams: (v) => v,
-    }),
-  ]),
-]);
+const rootRoute = RootRoute.withRouterContext<RouterContext>()({
+  component: () => (
+    <>
+      <Outlet />
+    </>
+  ),
+});
 
-export const router = createReactRouter({ routeConfig });
+const indexRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: Home,
+});
 
-export const Router = ({ children }: PropsWithChildren<{}>) => {
-  return <RouterProvider router={router}>{children}</RouterProvider>;
+const overlayRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: "overlay",
+  component: () => (
+    <>
+      <Outlet />
+    </>
+  ),
+});
+
+const overlayIndex = new Route({
+  getParentRoute: () => overlayRoute,
+  path: "/",
+});
+
+const overlayToken = new Route({
+  getParentRoute: () => overlayRoute,
+  path: "$overlayToken",
+  component: PlayerWidget,
+  parseParams: ({ overlayToken }) => ({
+    overlayToken: z.string().parse(overlayToken),
+  }),
+  stringifyParams: (v) => v,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, overlayRoute.addChildren([overlayIndex, overlayToken])]);
+
+export const router = new Router({
+  routeTree,
+});
+
+export const App = () => {
+  return <RouterProvider router={router} />;
 };
+
+declare module "@tanstack/router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+type RouterContext = {};
