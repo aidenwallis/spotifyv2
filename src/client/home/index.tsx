@@ -58,7 +58,7 @@ export const CopyableField = (props: { label: string; url: string; tokenType: To
   const handleReset = async () => {
     try {
       const resp = await resetToken.mutateAsync({ type: props.tokenType });
-      ctx.currentUser.setData(resp);
+      ctx.currentUser.setData(undefined, resp);
       setReset(true);
       resetTimeout(() => {
         setReset(false);
@@ -161,7 +161,7 @@ export const LoginPrompt = () => {
       <p className="text-slate-50">Please login with Spotify to continue.</p>
       <div className="pt-4">
         <a
-          href="http://localhost:8787/auth/redirect"
+          href="/auth/redirect"
           className="bg-blue-500 hover:bg-blue-600 active:bg-blue-800 text-sm font-semibold text-white px-4 py-2 rounded-md cursor-pointer inline-block"
         >
           Login with Spotify
