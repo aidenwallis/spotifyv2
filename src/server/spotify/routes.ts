@@ -1,7 +1,9 @@
 import { TRPCError } from "@trpc/server";
+import { Context } from "hono";
 import { DataResponse, getData } from "../../spotify";
 import { UserModel } from "../db";
 import { Dependencies } from "../deps";
+import { Env } from "../types";
 import { UserService } from "../user/service";
 import { validateTokens } from "../user/tokens";
 import { RatelimitedResponse, SpotifyService } from "./service";
@@ -91,10 +93,20 @@ function isErrorResponse(resp: GenericResponse): resp is ErrorResponse {
 }
 
 export async function currentlyPlaying(
-  { params, query }: { params: { apiToken: string }; query: { type?: string } },
+  c: Context<
+    "apiToken",
+    {
+      Bindings: Env;
+    },
+    unknown
+  >,
   deps: Dependencies
 ) {
-  const resp = await doGenericWork(params?.apiToken || "", deps);
+  const params = c.req.param();
+
+  const query = c.req.query();
+
+  const resp = await doGenericWork(params.apiToken || "", deps);
 
   if (query?.type === "json") {
     if (isErrorResponse(resp)) {
@@ -109,8 +121,12 @@ export async function currentlyPlaying(
     );
   }
 
-  return new Response(isErrorResponse(resp) ? resp.error : resp.message, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-    status: resp.status,
+  return c.newResponse(isErrorResponse(resp) ? resp.error : resp.message, resp.status as any, {
+    "Content-Type": "text/plain; charset=utf-8",
   });
+
+  // return new Response(isErrorResponse(resp) ? resp.error : resp.message, {
+  //   headers: { "Content-Type": "text/plain; charset=utf-8" },
+  //   status: resp.status,
+  // });
 }

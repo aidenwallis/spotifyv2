@@ -1,35 +1,56 @@
-import { AuthService } from "./service";
-import { getSha256 } from "../utils";
 import { parse, serialize } from "cookie";
-import { SpotifyService } from "../spotify/service";
-import { UserService } from "../user/service";
+import { Context } from "hono";
 import { Dependencies } from "../deps";
+import { SpotifyService } from "../spotify/service";
+import { Env } from "../types";
+import { UserService } from "../user/service";
+import { getSha256 } from "../utils";
+import { AuthService } from "./service";
 
 const stateCookieName = "state";
 const sessionCookieName = "session";
 
-export async function redirect(_: Request, deps: Dependencies) {
+export async function redirect(
+  c: Context<
+    string,
+    {
+      Bindings: Env;
+    },
+    unknown
+  >,
+  deps: Dependencies
+) {
   const service = new SpotifyService(deps);
   const state = service.generateState();
   const hashedState = await getSha256(state);
-  return new Response("", {
-    headers: {
-      Location: service.getAuthURL(state),
-      "Set-Cookie": serialize(stateCookieName, hashedState, {
-        httpOnly: true,
-        maxAge: 3600,
-      }),
-    },
-    status: 307,
+
+  c.header(
+    "Set-Cookie",
+    serialize(stateCookieName, hashedState, {
+      httpOnly: true,
+      maxAge: 3600,
+    })
+  );
+  return c.newResponse("", 307, {
+    Location: service.getAuthURL(state),
   });
 }
 
-export async function callback(req: Request, deps: Dependencies) {
+export async function callback(
+  c: Context<
+    string,
+    {
+      Bindings: Env;
+    },
+    unknown
+  >,
+  deps: Dependencies
+) {
   const authService = new AuthService(deps.env);
   const spotifyService = new SpotifyService(deps);
   const userService = new UserService(deps);
 
-  const { searchParams } = new URL(req.url);
+  const { searchParams } = new URL(c.req.url);
   const code = searchParams.get("code");
   if (!code) {
     return new Response("No code specified.", { status: 400 });
@@ -40,7 +61,7 @@ export async function callback(req: Request, deps: Dependencies) {
     return new Response("No state specified.", { status: 400 });
   }
 
-  const cookieState = parse(req.headers.get("Cookie") || "");
+  const cookieState = parse(c.req.headers.get("Cookie") || "");
   if (!cookieState[stateCookieName] || (await getSha256(state)) !== cookieState[stateCookieName]) {
     return new Response("Invalid state", { status: 400 });
   }
@@ -51,16 +72,13 @@ export async function callback(req: Request, deps: Dependencies) {
 
   const token = await authService.signToken(user);
 
-  return new Response("", {
-    headers: {
-      Location: "/",
-      "Set-Cookie": serialize(sessionCookieName, token, {
-        domain: "localhost",
-        httpOnly: false,
-        path: "/",
-        maxAge: 3600,
-      }),
-    },
-    status: 307,
+  return c.newResponse("", 307, {
+    Location: "/",
+    "Set-Cookie": serialize(sessionCookieName, token, {
+      domain: "localhost",
+      httpOnly: false,
+      path: "/",
+      maxAge: 3600,
+    }),
   });
 }

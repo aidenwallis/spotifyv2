@@ -1,11 +1,13 @@
-import { GetInferenceHelpers, inferAsyncReturnType, initTRPC, TRPCError } from "@trpc/server";
+import { inferAsyncReturnType, initTRPC, TRPCError } from "@trpc/server";
 import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { AuthService } from "./auth/service";
-import { Dependencies } from "./deps";
-import { UserFetchFlags, UserService } from "./user/service";
+import { Context as HonoCTX } from "hono";
 import { z } from "zod";
+import { AuthService } from "./auth/service";
+import { initDB, UserModel } from "./db";
+import { Dependencies } from "./deps";
 import { SpotifyService } from "./spotify/service";
-import { UserModel } from "./db";
+import { Env } from "./types";
+import { UserFetchFlags, UserService } from "./user/service";
 import { validateTokens } from "./user/tokens";
 
 const t = initTRPC.context<Context>().create();
@@ -76,7 +78,17 @@ export const tRouter = t.router({
     }),
 });
 
-export function createContext(deps: Dependencies) {
+export function createContext(
+  c: HonoCTX<
+    string,
+    {
+      Bindings: Env;
+    },
+    unknown
+  >
+) {
+  const deps = new Dependencies(initDB(c.env.DB), c.env.KV, c.env);
+
   const authService = new AuthService(deps.env);
 
   const resolveUserId = async (req: Request) => {

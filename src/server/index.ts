@@ -1,5 +1,6 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { Router } from "itty-router";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 
 import { callback, redirect } from "./auth/routes";
 import { initDB } from "./db";
@@ -8,10 +9,27 @@ import { currentlyPlaying } from "./spotify/routes";
 import { createContext, tRouter } from "./trpc";
 import { Env } from "./types";
 
-const router = Router();
+const app = new Hono<{ Bindings: Env }>();
 
-router.get("/auth/callback", callback);
-router.get("/auth/redirect", redirect);
+app.get("/auth/callback", (c) => {
+  const deps = new Dependencies(initDB(c.env.DB), c.env.KV, c.env);
+  return callback(c, deps);
+});
+
+app.get("/auth/redirect", (c) => {
+  const deps = new Dependencies(initDB(c.env.DB), c.env.KV, c.env);
+  return redirect(c, deps);
+});
+
+app.use(
+  "/trpc/*",
+  cors({
+    origin: ["http://localhost:5173", "https://bachitter.dev"],
+    allowMethods: ["GET", "POST"],
+    allowHeaders: ["Authorization, Content-Type"],
+    maxAge: 600,
+  })
+);
 
 const addCORS = (v: Response) => {
   const r = v.clone();
@@ -22,44 +40,30 @@ const addCORS = (v: Response) => {
   return r;
 };
 
-router.post("/trpc/*", (request: Request, deps: Dependencies) => {
+app.get("/trpc/*", (c) => {
   return fetchRequestHandler({
     endpoint: "/trpc",
-    req: request,
+    req: c.req,
     router: tRouter,
-    createContext: createContext(deps),
+    createContext: createContext(c),
   });
 });
 
-router.get("/trpc/*", (request: Request, deps: Dependencies) => {
-  console.log("test");
+app.post("/trpc/*", (c) => {
   return fetchRequestHandler({
     endpoint: "/trpc",
-    req: request,
+    req: c.req,
     router: tRouter,
-    createContext: createContext(deps),
+    createContext: createContext(c),
   });
 });
 
-router.get("/current/:apiToken", currentlyPlaying);
+app.get("/current/:apiToken", (c) => {
+  const deps = new Dependencies(initDB(c.env.DB), c.env.KV, c.env);
 
-router.all("*", () => new Response("", { status: 404 }));
+  return currentlyPlaying(c, deps);
+});
 
-export default {
-  fetch: async (request: Request, env: Env) => {
-    if (request.method === "OPTIONS") {
-      return addCORS(new Response("", { status: 204 }));
-    }
+app.all("*", () => new Response("", { status: 404 }));
 
-    const deps = new Dependencies(initDB(env.DB), env.KV, env);
-
-    let resp = (await router
-      .handle(request, deps)
-      .catch((error) => new Response(error.message || "Server Error", { status: error.status || 500 }))) as Response;
-    if (!resp) {
-      resp = new Response("", { status: 404 });
-    }
-
-    return addCORS(resp);
-  },
-};
+export default app;
