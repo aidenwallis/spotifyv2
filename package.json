@@ -16,9 +16,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hono/trpc-server": "^0.1.0",
-    "@tanstack/loaders": "0.0.1-beta.81",
-    "@tanstack/react-loaders": "0.0.1-beta.81",
     "@tanstack/react-query": "^4.23.0",
     "@tanstack/react-router": "^0.0.1-beta.83",
     "@trpc/client": "^10.9.0",
