@@ -1,11 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCReact, httpBatchLink } from "@trpc/react-query";
-import { GetInferenceHelpers } from "@trpc/server";
 import { PropsWithChildren, useMemo } from "react";
 import type { AppRouter } from "../server/trpc";
 import { useAuth } from "./auth";
-
-export type AppRouterTypes = GetInferenceHelpers<AppRouter>;
 
 export const trpc = createTRPCReact<AppRouter>();
 
