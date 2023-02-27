@@ -1,9 +1,9 @@
-import { useCurrentlyPlaying } from "./useCurrentlyPlaying";
-import { router } from "../router";
-import { usePlayerState } from "./usePlayerState";
-import { PlayerVisibility, TitleVisibility } from "./state-manager";
+import { useParams } from "@tanstack/react-router";
 import { PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { PlayerVisibility, TitleVisibility } from "./state-manager";
+import { useCurrentlyPlaying } from "./useCurrentlyPlaying";
 import { useImageLoaded } from "./useImageLoaded";
+import { usePlayerState } from "./usePlayerState";
 import styles from "./Widget.module.css";
 
 const PlayerShell = ({ children, visibility }: PropsWithChildren<{ visibility: PlayerVisibility }>) => {
@@ -80,7 +80,10 @@ const TrackName = ({ name }: { name: string }) => {
 };
 
 export const PlayerWidget = () => {
-  const { params } = router.useMatch("/overlay/:overlayToken");
+  const params = useParams({
+    from: "/overlay/$overlayToken",
+  });
+
   const status = useCurrentlyPlaying((params as { overlayToken: string })?.overlayToken);
   const state = usePlayerState(status);
 
